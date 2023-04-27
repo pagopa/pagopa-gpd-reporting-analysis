@@ -169,7 +169,7 @@ stages:
             condition: eq('${{ parameters.ENV }}', 'prod')
             inputs:
               azureSubscription: $(AZURE_SUBSCRIPTION)
-              appName: "${{variables.APP_NAME}}-fn-${{replace(variables.imageRepository, 'reporting', 'gpd')}}"
+              appName: "${{variables.APP_NAME}}-fn-gpd-analysis"
               imageName: "${{variables.dockerNamespace}}/${{ variables.imageRepository }}:latest"
               deployToSlotOrASE: true
               slotName: staging
