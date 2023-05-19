@@ -14,7 +14,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Azure Functions with Azure Queue trigger.
+ * Azure Functions with Azure Http trigger.
  */
 public class GetFlow {
 
