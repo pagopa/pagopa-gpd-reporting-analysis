@@ -11,7 +11,7 @@
 - run tests: `yarn test:ENV` in `src` folder
 
 ### Note
-Before run the test, set a variable `SUBCRIPTION_KEY` in your environment. 
+Before run the test, set a variable `API_SUBCRIPTION_KEY` in your environment. 
 
 You can configure the endpoints with `./config/env.ENV` file.
 
