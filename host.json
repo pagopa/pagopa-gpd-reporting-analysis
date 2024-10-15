@@ -15,7 +15,7 @@
       "default": "None",
       "Host.Results": "Error",
       "Function.GetFlow": "Information",
-      "Function.FunctionName": "Information",
+      "Function.GetFlowList": "Information",
       "Host.Aggregator": "Error",
       "Host": "Error"
     },
