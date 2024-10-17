@@ -115,9 +115,6 @@ jobs:
         with:
           ref: ${{ needs.release.outputs.version }}
 
-      - name: Update WSDL Location
-        run: sh upd_wsdl_location.sh ${{ vars.NODO_HOST }}
-
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
         with:
