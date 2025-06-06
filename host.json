@@ -14,8 +14,10 @@
     "logLevel": {
       "default": "None",
       "Host.Results": "Error",
-      "Function.GetFlow": "Information",
-      "Function.GetFlowList": "Information",
+      "Function.GetFlow": "Warning",
+      "Function.GetFlowList": "Warning",
+      "Microsoft": "Information",
+      "Worker": "Information",
       "Host.Aggregator": "Error",
       "Host": "Error"
     },
