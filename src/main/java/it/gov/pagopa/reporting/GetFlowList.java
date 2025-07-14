@@ -1,15 +1,19 @@
 package it.gov.pagopa.reporting;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.azure.functions.*;
 import com.microsoft.azure.functions.annotation.AuthorizationLevel;
 import com.microsoft.azure.functions.annotation.BindingName;
 import com.microsoft.azure.functions.annotation.FunctionName;
 import com.microsoft.azure.functions.annotation.HttpTrigger;
+
+import it.gov.pagopa.reporting.model.Fdr3Response;
 import it.gov.pagopa.reporting.model.Flow;
 import it.gov.pagopa.reporting.service.FlowsService;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -27,7 +31,7 @@ public class GetFlowList {
     private String containerBlob = System.getenv("FLOWS_XML_BLOB");
 
     /**
-     * This function will be invoked when a new message is detected in the queue
+     * This function will be invoked by an incoming HTTP request
      * @return
      */
     @FunctionName("GetFlowList")
@@ -42,23 +46,34 @@ public class GetFlowList {
 
         Logger logger = context.getLogger();
 
-        logger.log(Level.INFO, () -> "RetrieveFlows function executed at: " + LocalDateTime.now());
+        logger.log(Level.INFO, () -> "[GetFlowList] RetrieveFlows function executed at: " + LocalDateTime.now());
 
         FlowsService flowsService = getFlowsServiceInstance(logger);
 
         try {
             String flowDate = request.getQueryParameters().getOrDefault("flowDate", null);
-            List<Flow> flows = flowsService.getByOrganization(organizationId, flowDate);
-            ObjectMapper objectMapper = new ObjectMapper();
-            final String data = objectMapper.writeValueAsString(flows);
+            // List<Flow> flows = flowsService.getByOrganization(organizationId, flowDate);
+            // ObjectMapper objectMapper = new ObjectMapper();
+            // final String data = objectMapper.writeValueAsString(flows);
+
+            Fdr3Response fdr3Response = flowsService.fetchFdr3List(organizationId, flowDate);
+            DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+            List<Flow> responseList = fdr3Response.getData().stream()
+                .map(d -> {
+                    OffsetDateTime publishedDateTime = OffsetDateTime.parse(d.getPublished());
+                    String formattedDate = publishedDateTime.format(outputFormatter);
+                    return new Flow(d.getFdr(), formattedDate);
+                })
+            .sorted(Comparator.comparing(Flow::getFlowId).reversed())
+            .toList();
 
             return request.createResponseBuilder(HttpStatus.OK)
                     .header("Content-Type", "application/json")
-                    .body(data)
+                    .body(responseList)
                     .build();
 
         } catch (Exception e) {
-            logger.log(Level.SEVERE, () -> "GetFlowList error: " + e.getLocalizedMessage());
+            logger.log(Level.SEVERE, () -> "[GetFlowList] GetFlowList error: " + e.getLocalizedMessage());
 
             return request.createResponseBuilder(HttpStatus.BAD_REQUEST)
                     .header("Content-Type", "application/json")

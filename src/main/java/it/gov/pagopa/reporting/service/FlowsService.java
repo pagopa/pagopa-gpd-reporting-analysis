@@ -4,26 +4,41 @@ import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.azure.storage.CloudStorageAccount;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.table.CloudTable;
-import com.microsoft.azure.storage.table.QueryTableOperation;
 import com.microsoft.azure.storage.table.TableQuery;
 import it.gov.pagopa.reporting.entity.FlowEntity;
+import it.gov.pagopa.reporting.model.Fdr3Data;
+import it.gov.pagopa.reporting.model.Fdr3Response;
 import it.gov.pagopa.reporting.model.Flow;
 import it.gov.pagopa.reporting.util.AzuriteStorageUtil;
 import it.gov.pagopa.reporting.util.FlowConverter;
 import org.modelmapper.Converter;
 import org.modelmapper.ModelMapper;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.InputStreamReader;
+import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
 
 public class FlowsService {
 
@@ -31,6 +46,17 @@ public class FlowsService {
     private String flowsTable;
     private String containerBlob;
     private Logger logger;
+
+    private final HttpClient httpClient = HttpClient.newHttpClient();
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    private final String Fdr3ApiKey = System.getenv("FDR3_APIM_SUBSCRIPTION_KEY");
+    private final String Fdr1ApiKey = System.getenv("FDR1_APIM_SUBSCRIPTION_KEY");
+    private final String fdr3BaseUrl = System.getenv("FDR3_BASE_URL");
+    private final String fdr1BaseUrl = System.getenv("FDR1_BASE_URL");
+
+    private final int flowListDepth = Integer.parseInt(System.getenv("FDR3_FLOW_LIST_DEPTH"));
+    private final String listEl4Page = System.getenv("FDR3_LIST_ELEMENTS_FOR_PAGE");
 
     public FlowsService(String storageConnectionString, String flowsTable, String containerBlob, Logger logger) {
 
@@ -102,4 +128,108 @@ public class FlowsService {
         return outputStream.toString();
     }
 
+    public Fdr3Response fetchFdr3List(String organizationId, String flowDate) throws Exception {
+
+        logger.log(Level.INFO, () -> String.format("[FlowsService][fetchFdr3List] START get flow list from FDR3: %s", organizationId));
+
+        // build upper and lower boud in case specific flowDate has been specified
+        final OffsetDateTime filterUpperBound = (flowDate != null)
+                ? OffsetDateTime.parse(flowDate + "T23:59:59Z")
+                : null;
+
+        final String publishedGt = (flowDate != null)
+                ? flowDate + "T00:00:00Z"
+                : OffsetDateTime.now(ZoneOffset.UTC)
+                    .minusMonths(flowListDepth)
+                    .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+
+        String url = String.format(
+            "%s/organizations/%s/fdrs?page=1&size=%s&publishedGt=%s",
+            fdr3BaseUrl,
+            organizationId,
+            listEl4Page,
+            publishedGt
+        );
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Ocp-Apim-Subscription-Key", Fdr3ApiKey)
+                .GET()
+                .build();
+
+        logger.log(Level.INFO, () -> String.format("[FlowsService][fetchFdr3List] calling FDR3, url: %s", url));
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() != 200) {
+            throw new RuntimeException("Error while calling FDR3 to retrieve flow list: " + response.body());
+        }
+
+        Fdr3Response fullResponse = objectMapper.readValue(response.body(), Fdr3Response.class);
+
+        if (filterUpperBound != null) {
+            
+            logger.log(Level.INFO, () -> String.format("[FlowsService][fetchFdr3List] filtering elements, lowerbound [%s] upperbound [%s]", 
+                publishedGt, filterUpperBound.toString()));
+
+            List<Fdr3Data> filteredData = fullResponse.getData().stream()
+                    .filter(d -> {
+                        OffsetDateTime publishedDate = OffsetDateTime.parse(d.getPublished());
+                        return publishedDate.isBefore(filterUpperBound.plusSeconds(1)); // <= 23:59:59
+                    })
+                    .toList();
+
+            return Fdr3Response.builder()
+                    .metadata(fullResponse.getMetadata())
+                    .count(filteredData.size())
+                    .data(filteredData)
+                    .build();
+        }
+
+        return fullResponse;
+    }
+
+    public String fetchFdr1Flow(String organizationId, String fdr) throws Exception {
+
+        logger.log(Level.INFO, () -> String.format("[FlowsService][fetchFdr1Flow] START get flow from FDR3, organizationId: %s flowId: %s", organizationId, fdr));
+
+        String url = String.format(
+            "%s/internal/organizations/%s/fdrs/%s",
+            fdr1BaseUrl,
+            organizationId,
+            fdr
+        );
+
+        logger.log(Level.INFO, () -> String.format("[FlowsService][fetchFdr1Flow] calling FDR1, url: %s", url));
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create(url))
+            .header("Ocp-Apim-Subscription-Key", Fdr1ApiKey + ";product=fdr_internal")
+            .GET()
+            .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() != 200) {
+            throw new RuntimeException("[FlowsService][fetchFdr1Flow] Error while calling FDR1 internal to retrieve flow details: " + response.body());
+        }
+
+        // get compressed base64 xml rendicontazione
+        logger.log(Level.INFO, "[FlowsService][fetchFdr1Flow] get compressed base64 xml");
+        String compressedXmlBase64 = objectMapper.readTree(response.body()).get("xmlRendicontazione").asText();
+        byte[] gzipBytes = Base64.getDecoder().decode(compressedXmlBase64);
+        
+        // decompress GZIP
+        logger.log(Level.INFO, "[FlowsService][fetchFdr1Flow] decompress xml file");
+        try (GZIPInputStream gis = new GZIPInputStream(new ByteArrayInputStream(gzipBytes));
+            InputStreamReader reader = new InputStreamReader(gis, StandardCharsets.UTF_8);
+            BufferedReader in = new BufferedReader(reader)) {
+
+            StringBuilder xmlBuilder = new StringBuilder();
+            String line;
+            while ((line = in.readLine()) != null) {
+                xmlBuilder.append(line).append("\n");
+            }
+
+            return xmlBuilder.toString().trim(); // XML already formatted
+        }
+    }
 }

@@ -25,7 +25,7 @@ public class GetFlow {
     private String containerBlob = System.getenv("FLOWS_CONTAINER");
 
     /**
-     * This function will be invoked when a new message is detected in the queue
+     * This function will be invoked by an incoming HTTP request
      * @return
      */
     @FunctionName("GetFlow")
@@ -42,20 +42,21 @@ public class GetFlow {
 
         Logger logger = context.getLogger();
 
-        logger.log(Level.INFO, () -> "RetrieveFlow function executed at: " + LocalDateTime.now());
+        logger.log(Level.INFO, () -> "[GetFlow] RetrieveFlow function executed at: " + LocalDateTime.now());
 
         FlowsService flowsService = getFlowsServiceInstance(logger);
 
         try {
-            String data = flowsService.getByFlow(organizationId, flowId, flowDate);
+            //String data = flowsService.getByFlow(organizationId, flowId, flowDate);
 
+            String data = flowsService.fetchFdr1Flow(organizationId, flowId);
             return request.createResponseBuilder(HttpStatus.OK)
                     .header("Content-Type", MediaType.APPLICATION_XML)
                     .body(data)
                     .build();
 
         } catch (Exception e) {
-            logger.log(Level.SEVERE, () -> "GetFlow error: " + e.getLocalizedMessage());
+            logger.log(Level.SEVERE, () -> "[GetFlow] GetFlow error: " + e.getLocalizedMessage());
 
             return request.createResponseBuilder(HttpStatus.NOT_FOUND)
                     .header("Content-Type", "application/json")
