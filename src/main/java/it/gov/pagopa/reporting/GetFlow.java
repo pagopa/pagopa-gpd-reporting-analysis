@@ -47,8 +47,6 @@ public class GetFlow {
         FlowsService flowsService = getFlowsServiceInstance(logger);
 
         try {
-            //String data = flowsService.getByFlow(organizationId, flowId, flowDate);
-
             String data = flowsService.fetchFdr1Flow(organizationId, flowId);
             return request.createResponseBuilder(HttpStatus.OK)
                     .header("Content-Type", MediaType.APPLICATION_XML)

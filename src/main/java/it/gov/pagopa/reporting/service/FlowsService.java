@@ -128,6 +128,20 @@ public class FlowsService {
         return outputStream.toString();
     }
 
+    /**
+     * Retrieves the list of reporting flows by invoking the APIs exposed by FDR3.
+     * <p>
+     * If a flowDate is provided, results are filtered to include only entries whose date-time 
+     * is inside the day specified in flowDate. To achieve this, the method constructs an upper bound
+     * and lower bound for the date-time based on flowDate, the FDR3 API accepts only a lower bound,
+     * for that reason the method filters the results by the upper bound after the API call.
+     *
+     * @param organizationId the unique identifier of the organization to retrieve flows for
+     * @param flowDate       optional ISO-8601 date (yyyy-MM-dd) used to filter flows; if null,
+     *                       retrieves flows up to a depth defined by configuration
+     * @return a {@link Fdr3Response} with the list of matching flows
+     * @throws Exception if an HTTP or parsing error occurs while calling the FDR3 endpoint
+     */
     public Fdr3Response fetchFdr3List(String organizationId, String flowDate) throws Exception {
 
         logger.log(Level.INFO, () -> String.format("[FlowsService][fetchFdr3List] START get flow list from FDR3: %s", organizationId));

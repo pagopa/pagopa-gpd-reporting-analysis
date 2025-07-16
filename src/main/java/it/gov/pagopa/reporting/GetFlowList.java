@@ -52,10 +52,6 @@ public class GetFlowList {
 
         try {
             String flowDate = request.getQueryParameters().getOrDefault("flowDate", null);
-            // List<Flow> flows = flowsService.getByOrganization(organizationId, flowDate);
-            // ObjectMapper objectMapper = new ObjectMapper();
-            // final String data = objectMapper.writeValueAsString(flows);
-
             Fdr3Response fdr3Response = flowsService.fetchFdr3List(organizationId, flowDate);
             DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
             List<Flow> responseList = fdr3Response.getData().stream()
