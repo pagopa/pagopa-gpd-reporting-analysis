@@ -1,24 +1,29 @@
 package it.gov.pagopa.reporting;
 
-import com.azure.storage.blob.models.BlobStorageException;
-import com.microsoft.azure.functions.ExecutionContext;
-import com.microsoft.azure.functions.HttpRequestMessage;
-import com.microsoft.azure.functions.HttpResponseMessage;
-import com.microsoft.azure.functions.HttpStatus;
-import it.gov.pagopa.reporting.service.FlowsService;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.util.Optional;
+import java.util.logging.Logger;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Optional;
-import java.util.logging.Logger;
+import com.azure.storage.blob.models.BlobStorageException;
+import com.microsoft.azure.functions.ExecutionContext;
+import com.microsoft.azure.functions.HttpRequestMessage;
+import com.microsoft.azure.functions.HttpResponseMessage;
+import com.microsoft.azure.functions.HttpStatus;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import it.gov.pagopa.reporting.service.FlowsService;
 
 @ExtendWith(MockitoExtension.class)
 class GetFlowTest {
@@ -44,7 +49,7 @@ class GetFlowTest {
         // precondition
         when(context.getLogger()).thenReturn(logger);
         doReturn(flowsService).when(function).getFlowsServiceInstance(logger);
-        when(flowsService.getByFlow(organizationId, flowId, flowDate)).thenReturn("");
+        when(flowsService.fetchFdr1Flow(organizationId, flowId)).thenReturn("");
 
         final HttpResponseMessage.Builder builder = mock(HttpResponseMessage.Builder.class);
         HttpRequestMessage<Optional<String>> request = mock(HttpRequestMessage.class);
@@ -76,7 +81,7 @@ class GetFlowTest {
         // precondition
         when(context.getLogger()).thenReturn(logger);
         doReturn(flowsService).when(function).getFlowsServiceInstance(logger);
-        doThrow(BlobStorageException.class).when(flowsService).getByFlow(anyString(), anyString(), anyString());
+        doThrow(BlobStorageException.class).when(flowsService).fetchFdr1Flow(anyString(), anyString());
 
         final HttpResponseMessage.Builder builder = mock(HttpResponseMessage.Builder.class);
         HttpRequestMessage<Optional<String>> request = mock(HttpRequestMessage.class);
