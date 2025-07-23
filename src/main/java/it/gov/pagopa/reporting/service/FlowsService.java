@@ -183,7 +183,7 @@ public class FlowsService {
         if (filterUpperBound != null) {
             
             logger.log(Level.INFO, () -> String.format("[FlowsService][fetchFdr3List] filtering elements, lowerbound [%s] upperbound [%s]", 
-                publishedGt, filterUpperBound.toString()));
+                flowDate, filterUpperBound.toString()));
 
             List<Fdr3Data> filteredData = fullResponse.getData().stream()
                     .filter(d -> {
