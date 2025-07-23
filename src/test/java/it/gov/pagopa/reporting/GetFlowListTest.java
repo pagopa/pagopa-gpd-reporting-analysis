@@ -1,27 +1,34 @@
 package it.gov.pagopa.reporting;
 
-import com.microsoft.azure.functions.ExecutionContext;
-import com.microsoft.azure.functions.HttpRequestMessage;
-import com.microsoft.azure.functions.HttpResponseMessage;
-import com.microsoft.azure.functions.HttpStatus;
-import it.gov.pagopa.reporting.model.Flow;
-import it.gov.pagopa.reporting.service.FlowsService;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.security.InvalidKeyException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.logging.Logger;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.security.InvalidKeyException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.logging.Logger;
+import com.microsoft.azure.functions.ExecutionContext;
+import com.microsoft.azure.functions.HttpRequestMessage;
+import com.microsoft.azure.functions.HttpResponseMessage;
+import com.microsoft.azure.functions.HttpStatus;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import it.gov.pagopa.reporting.model.Fdr3Metadata;
+import it.gov.pagopa.reporting.model.Fdr3Response;
+import it.gov.pagopa.reporting.service.FlowsService;
 
 @ExtendWith(MockitoExtension.class)
 class GetFlowListTest {
@@ -40,22 +47,29 @@ class GetFlowListTest {
 
         // general var
         Logger logger = Logger.getLogger("testlogging");
-        List<Flow> flowList = new ArrayList<>();
+        Fdr3Response fdr3Resp = Fdr3Response.builder()
+            .metadata(Fdr3Metadata.builder().pageNumber(0).pageSize(0).totPage(0).build())
+            .count(0)
+            .data(new ArrayList<>())
+            .build();
         String organizationId =  "90000000000";
 
         // precondition
         when(context.getLogger()).thenReturn(logger);
         doReturn(flowsService).when(function).getFlowsServiceInstance(logger);
-        doReturn(flowList).when(flowsService).getByOrganization(organizationId, "2022-01-01");
+        doReturn(fdr3Resp).when(flowsService).fetchFdr3List(organizationId, "2022-01-01");
 
         final HttpResponseMessage.Builder builder = mock(HttpResponseMessage.Builder.class);
         HttpRequestMessage<Optional<String>> request = mock(HttpRequestMessage.class);
 
         doReturn(builder).when(request).createResponseBuilder(any(HttpStatus.class));
         doReturn(builder).when(builder).header(anyString(), anyString());
-        doReturn(builder).when(builder).body(anyString());
+        doReturn(builder).when(builder).body(any());  
 
         HttpResponseMessage responseMock = mock(HttpResponseMessage.class);
+        Map<String,String> qp = new HashMap<>();
+        qp.put("flowDate", "2022-01-01");
+        when(request.getQueryParameters()).thenReturn(qp);
         doReturn(HttpStatus.OK).when(responseMock).getStatus();
         doReturn(responseMock).when(builder).build();
 
@@ -71,20 +85,24 @@ class GetFlowListTest {
 
         // general var
         Logger logger = Logger.getLogger("testlogging");
-        List<Flow> flowList = new ArrayList<>();
+        Fdr3Response fdr3Resp = Fdr3Response.builder()
+            .metadata(Fdr3Metadata.builder().pageNumber(0).pageSize(0).totPage(0).build())
+            .count(0)
+            .data(new ArrayList<>())
+            .build();
         String organizationId =  "90000000000";
 
         // precondition
         when(context.getLogger()).thenReturn(logger);
         doReturn(flowsService).when(function).getFlowsServiceInstance(logger);
-        doReturn(flowList).when(flowsService).getByOrganization(organizationId, null);
+        doReturn(fdr3Resp).when(flowsService).fetchFdr3List(organizationId, null);
 
         final HttpResponseMessage.Builder builder = mock(HttpResponseMessage.Builder.class);
         HttpRequestMessage<Optional<String>> request = mock(HttpRequestMessage.class);
 
         doReturn(builder).when(request).createResponseBuilder(any(HttpStatus.class));
         doReturn(builder).when(builder).header(anyString(), anyString());
-        doReturn(builder).when(builder).body(anyString());
+        doReturn(builder).when(builder).body(any());
 
         HttpResponseMessage responseMock = mock(HttpResponseMessage.class);
         doReturn(HttpStatus.OK).when(responseMock).getStatus();
@@ -108,7 +126,7 @@ class GetFlowListTest {
         // precondition
         when(context.getLogger()).thenReturn(logger);
         doReturn(flowsService).when(function).getFlowsServiceInstance(logger);
-        doThrow(InvalidKeyException.class).when(flowsService).getByOrganization(organizationId, "2022-01-01");
+        doThrow(InvalidKeyException.class).when(flowsService).fetchFdr3List(organizationId, "2022-01-01");
 
         final HttpResponseMessage.Builder builder = mock(HttpResponseMessage.Builder.class);
         HttpRequestMessage<Optional<String>> request = mock(HttpRequestMessage.class);
