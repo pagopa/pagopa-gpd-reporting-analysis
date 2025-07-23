@@ -151,18 +151,18 @@ public class FlowsService {
                 ? OffsetDateTime.parse(flowDate + "T23:59:59Z")
                 : null;
 
-        final String publishedGt = (flowDate != null)
+        final String fdrFlowDate = (flowDate != null)
                 ? flowDate + "T00:00:00Z"
                 : OffsetDateTime.now(ZoneOffset.UTC)
                     .minusMonths(flowListDepth)
                     .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
 
         String url = String.format(
-            "%s/organizations/%s/fdrs?page=1&size=%s&publishedGt=%s",
+            "%s/organizations/%s/fdrs?page=1&size=%s&flowDate=%s",
             fdr3BaseUrl,
             organizationId,
             listEl4Page,
-            publishedGt
+            fdrFlowDate
         );
 
         HttpRequest request = HttpRequest.newBuilder()
