@@ -187,8 +187,11 @@ public class FlowsService {
 
             List<Fdr3Data> filteredData = fullResponse.getData().stream()
                     .filter(d -> {
-                        OffsetDateTime publishedDate = OffsetDateTime.parse(d.getPublished());
-                        return publishedDate.isBefore(filterUpperBound.plusSeconds(1)); // <= 23:59:59
+                        if (d.getFlowDate() == null) {
+                            return false; // skip entries without flowDate
+                        }
+                        OffsetDateTime offsetFlowDate = OffsetDateTime.parse(d.getFlowDate());
+                        return offsetFlowDate.isBefore(filterUpperBound.plusSeconds(1));
                     })
                     .toList();
 
