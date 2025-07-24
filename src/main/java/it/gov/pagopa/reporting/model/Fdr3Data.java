@@ -35,4 +35,9 @@ public class Fdr3Data {
      */
     private String published;
 
+    /**
+     * Timestamp representing the flow date time in ISO-8601 format.
+     */
+    private String flowDate;
+
 }

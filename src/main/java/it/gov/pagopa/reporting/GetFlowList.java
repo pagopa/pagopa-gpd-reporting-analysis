@@ -56,11 +56,11 @@ public class GetFlowList {
             DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
             List<Flow> responseList = fdr3Response.getData().stream()
                 .map(d -> {
-                    OffsetDateTime publishedDateTime = OffsetDateTime.parse(d.getPublished());
-                    String formattedDate = publishedDateTime.format(outputFormatter);
+                    OffsetDateTime offsetFlowDate = OffsetDateTime.parse(d.getFlowDate());
+                    String formattedDate = offsetFlowDate.format(outputFormatter);
                     return new Flow(d.getFdr(), formattedDate);
                 })
-            .sorted(Comparator.comparing(Flow::getFlowId).reversed())
+            .sorted(Comparator.comparing(Flow::getFlowDate).reversed())
             .toList();
 
             return request.createResponseBuilder(HttpStatus.OK)
