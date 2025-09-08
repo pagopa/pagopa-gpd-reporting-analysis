@@ -1,12 +1,3 @@
-data "azurerm_resource_group" "dashboards" {
-  name = "dashboards"
-}
-
-data "azurerm_kubernetes_cluster" "aks" {
-  name                = local.aks_cluster.name
-  resource_group_name = local.aks_cluster.resource_group_name
-}
-
 data "github_organization_teams" "all" {
   root_teams_only = true
   summary_only    = true
@@ -41,12 +32,6 @@ data "azurerm_key_vault_secret" "key_vault_integration_test_subkey" {
   name         = "integration-test-subkey"
   key_vault_id = data.azurerm_key_vault.key_vault.id
 }
-
-data "azurerm_key_vault_secret" "flow_sa_connection_string" {
-  name         = "flows-sa-${var.env_short}-connection-string"
-  key_vault_id = data.azurerm_key_vault.domain_key_vault.id
-}
-
 
 data "azurerm_user_assigned_identity" "identity_cd_01"{
   name = "${local.prefix}-${var.env_short}-${local.domain}-01-github-cd-identity"

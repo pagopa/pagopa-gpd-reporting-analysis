@@ -25,7 +25,6 @@ locals {
     "TENANT_ID" : data.azurerm_client_config.current.tenant_id,
     "SUBSCRIPTION_ID" : data.azurerm_subscription.current.subscription_id,
     "API_SUBSCRIPTION_KEY" : data.azurerm_key_vault_secret.key_vault_integration_test_subkey.value,
-    "FLOW_SA_CONNECTION_STRING": data.azurerm_key_vault_secret.flow_sa_connection_string.value
   }
   env_variables = {
     "CONTAINER_APP_ENVIRONMENT_NAME" : local.container_app_environment.name,
@@ -33,7 +32,6 @@ locals {
     "CLUSTER_NAME" : local.aks_cluster.name,
     "CLUSTER_RESOURCE_GROUP" : local.aks_cluster.resource_group_name,
     "NAMESPACE" : local.domain,
-    "REPORTING_BATCH_QUEUE": "pagopa${var.env_short}flowsaqueueorg"
   }
   repo_secrets = {
     "SONAR_TOKEN" : data.azurerm_key_vault_secret.key_vault_sonar.value,
