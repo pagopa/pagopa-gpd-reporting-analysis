@@ -45,7 +45,7 @@ public class GpdReportingSync {
 
     }
 
-    public  void gpdReport(Logger logger, String organizationId, String iuv, String transferId) {
+    public void gpdReport(Logger logger, String organizationId, String iuv, String transferId) {
         try {
             HttpResponse<String> response = Unirest.post(gpdBasePath + "/organizations/" + organizationId + "/paymentoptions/" + iuv + "/transfers/" + transferId + "/report")
                     .header("accept", "application/json")
