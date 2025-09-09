@@ -55,7 +55,12 @@ public class FlowsService {
     private final String fdr3BaseUrl = System.getenv("FDR3_BASE_URL");
     private final String fdr1BaseUrl = System.getenv("FDR1_BASE_URL");
 
-    private final int flowListDepth = Integer.parseInt(System.getenv("FDR3_FLOW_LIST_DEPTH"));
+    private final int flowListDepth = Integer.parseInt(deNull(System.getenv("FDR3_FLOW_LIST_DEPTH")));
+
+    private String deNull(String fdr3FlowListDepth) {
+        return fdr3FlowListDepth != null ? fdr3FlowListDepth : "0";
+    }
+
     private final String listEl4Page = System.getenv("FDR3_LIST_ELEMENTS_FOR_PAGE");
 
     public FlowsService(String storageConnectionString, String flowsTable, String containerBlob, Logger logger) {
