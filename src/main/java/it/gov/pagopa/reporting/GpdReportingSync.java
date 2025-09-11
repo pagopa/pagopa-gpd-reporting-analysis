@@ -1,11 +1,12 @@
 package it.gov.pagopa.reporting;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
-import com.microsoft.azure.functions.*;
-import com.microsoft.azure.functions.annotation.*;
+import com.microsoft.azure.functions.ExecutionContext;
+import com.microsoft.azure.functions.annotation.Cardinality;
+import com.microsoft.azure.functions.annotation.EventHubTrigger;
+import com.microsoft.azure.functions.annotation.FunctionName;
 import it.gov.pagopa.reporting.model.ReportedIUVEventModel;
 
 import java.time.LocalDateTime;
@@ -24,18 +25,19 @@ public class GpdReportingSync {
 
     /**
      * This function will be invoked by an incoming HTTP request
+     *
      * @return
      */
     @FunctionName("GpdReportingSync")
-    public void run (
+    public void run(
             @EventHubTrigger(
                     name = "GpdReportingSyncTrigger",
                     eventHubName = "", // blank because the value is included in the connection string
-                    consumerGroup = "gpd-reporting-test",
+                    consumerGroup = "gpd-reporting-sync",
                     connection = "FDR_EVENTHUB_CONN_STRING",
                     cardinality = Cardinality.MANY)
             List<String> items,
-            final ExecutionContext context) throws JsonProcessingException {
+            final ExecutionContext context) {
 
         Logger logger = context.getLogger();
         logger.log(Level.FINE, () -> "[GpdReportingSync] function executed at: " + LocalDateTime.now());
@@ -43,8 +45,14 @@ public class GpdReportingSync {
         ObjectMapper objectMapper = new ObjectMapper();
 
 
-        for (String event: items) {
-            ReportedIUVEventModel reportedIUVEventModel = objectMapper.readValue(event, ReportedIUVEventModel.class);
+        for (String event : items) {
+            ReportedIUVEventModel reportedIUVEventModel;
+            try {
+                reportedIUVEventModel = objectMapper.readValue(event, ReportedIUVEventModel.class);
+            } catch (Exception e) {
+                logger.log(Level.WARNING, () -> "[GpdReportingSync] The message was ignored because it wasn't parsed correctly. msg=[" + event + "]");
+                continue;
+            }
             gpdReport(logger, reportedIUVEventModel.getDomainId(), reportedIUVEventModel.getIuv(), String.valueOf(reportedIUVEventModel.getIdTransfer()));
         }
 
@@ -56,9 +64,11 @@ public class GpdReportingSync {
                     .header("accept", "application/json")
                     .header("ocp-apim-subscription-key", gpdSubeKey)
                     .asString();
-            logger.log(Level.INFO, () -> response.getStatus() +" "+ response.getBody()); // TODO delete this line
+            if (response.getStatus() != 200) {
+                logger.log(Level.SEVERE, () -> "[GpdReportingSync] GPD client failed with status " + response.getStatus() + " body:" + response.getBody());
+            }
         } catch (Exception e) {
-            logger.log(Level.SEVERE, () -> "[GpdReportingSync] GPD client error: " + e.getLocalizedMessage());
+            logger.log(Level.SEVERE, () -> "[GpdReportingSync] GPD client Exception: " + e.getLocalizedMessage());
         }
     }
 

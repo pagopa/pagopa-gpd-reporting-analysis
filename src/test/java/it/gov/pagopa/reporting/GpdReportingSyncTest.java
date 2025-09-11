@@ -1,5 +1,7 @@
 package it.gov.pagopa.reporting;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.azure.functions.ExecutionContext;
 import com.microsoft.azure.functions.HttpStatus;
 import it.gov.pagopa.reporting.model.ReportedIUVEventModel;
@@ -36,23 +38,24 @@ class GpdReportingSyncTest {
         Logger logger = Logger.getLogger("testlogging");
         when(context.getLogger()).thenReturn(logger);
 
-        List<ReportedIUVEventModel> messages = new ArrayList<>();
+        List<String> messages = new ArrayList<>();
 
-        function.run(messages, null, context);
+        function.run(messages,  context);
 
         Mockito.verify(function, never()).gpdReport(any(), any(), any(), any());
     }
 
     @Test
-    void oneMessage() {
+    void oneMessage() throws JsonProcessingException {
         Logger logger = Logger.getLogger("testlogging");
         when(context.getLogger()).thenReturn(logger);
 
-        List<ReportedIUVEventModel> messages = new ArrayList<>();
+        List<String> messages = new ArrayList<>();
         ReportedIUVEventModel msg = new ReportedIUVEventModel();
-        messages.add(msg);
+        var mapper = new ObjectMapper();
+        messages.add(mapper.writeValueAsString(msg));
 
-        function.run(messages, null, context);
+        function.run(messages, context);
 
         Mockito.verify(function, times(1)).gpdReport(any(), any(), any(), any());
     }

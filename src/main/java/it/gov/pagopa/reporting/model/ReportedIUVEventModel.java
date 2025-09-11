@@ -1,12 +1,12 @@
 package it.gov.pagopa.reporting.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
 
 @Data
 @NoArgsConstructor
@@ -27,7 +27,7 @@ public class ReportedIUVEventModel {
     private Integer outcomeCode;
 
     @JsonProperty("DATA_ESITO_SINGOLO_PAGAMENTO")
-    private LocalDateTime singlePaymentOutcomeDate;
+    private String singlePaymentOutcomeDate;
 
     @JsonProperty("IDSP")
     private String idsp;
@@ -36,7 +36,7 @@ public class ReportedIUVEventModel {
     private String flowId;
 
     @JsonProperty("DATA_ORA_FLUSSO")
-    private LocalDateTime flowDateTime;
+    private String flowDateTime;
 
     @JsonProperty("ID_DOMINIO")
     private String domainId;
@@ -51,7 +51,7 @@ public class ReportedIUVEventModel {
     private String uniqueId;
 
     @JsonProperty("INSERTED_TIMESTAMP")
-    private LocalDateTime insertedTimestamp;
+    private String insertedTimestamp;
 
     @JsonProperty("ID_TRANSFER")
     private Long idTransfer;
