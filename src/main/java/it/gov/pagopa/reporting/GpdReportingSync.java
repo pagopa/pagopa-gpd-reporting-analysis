@@ -1,5 +1,7 @@
 package it.gov.pagopa.reporting;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.microsoft.azure.functions.*;
@@ -8,7 +10,6 @@ import it.gov.pagopa.reporting.model.ReportedIUVEventModel;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -28,19 +29,23 @@ public class GpdReportingSync {
     @FunctionName("GpdReportingSync")
     public void run (
             @EventHubTrigger(
-                    name = "BizEvent",
+                    name = "GpdReportingSyncTrigger",
                     eventHubName = "", // blank because the value is included in the connection string
+                    consumerGroup = "gpd-reporting-test",
                     connection = "FDR_EVENTHUB_CONN_STRING",
                     cardinality = Cardinality.MANY)
-            List<ReportedIUVEventModel> items,
-            @BindingName(value = "PropertiesArray") Map<String, Object>[] properties,
-            final ExecutionContext context) {
+            List<String> items,
+            final ExecutionContext context) throws JsonProcessingException {
 
         Logger logger = context.getLogger();
         logger.log(Level.FINE, () -> "[GpdReportingSync] function executed at: " + LocalDateTime.now());
 
-        for (ReportedIUVEventModel event: items) {
-            gpdReport(logger, event.getDomainId(), event.getIuv(), String.valueOf(event.getIdTransfer()));
+        ObjectMapper objectMapper = new ObjectMapper();
+
+
+        for (String event: items) {
+            ReportedIUVEventModel reportedIUVEventModel = objectMapper.readValue(event, ReportedIUVEventModel.class);
+            gpdReport(logger, reportedIUVEventModel.getDomainId(), reportedIUVEventModel.getIuv(), String.valueOf(reportedIUVEventModel.getIdTransfer()));
         }
 
     }

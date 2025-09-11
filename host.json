@@ -12,14 +12,9 @@
   "logging": {
     "fileLoggingMode": "debugOnly",
     "logLevel": {
-      "Host.Results": "Error",
-      "Function.GetFlow": "Warning",
-      "Function.GetFlowList": "Warning",
-      "Function.GpdReportingSync": "Information",
-      "Microsoft": "Information",
-      "Worker": "Information",
-      "Host.Aggregator": "Error",
-      "Host": "Error"
+      "Function.GetFlow": "Information",
+      "Function.GetFlowList": "Information",
+      "Function.GpdReportingSync": "Information"
     },
     "applicationInsights": {
       "samplingSettings": {
