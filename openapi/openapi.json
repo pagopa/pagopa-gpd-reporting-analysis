@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Reporting Analysis - GPD",
-    "version": "0.2.3-3-PAGOPA-3213-ipg-143-gpd-reporting-sviluppare-aggiornamento-a-report-delle-pd"
+    "version": "0.2.3-4-PAGOPA-3213-ipg-143-gpd-reporting-sviluppare-aggiornamento-a-report-delle-pd"
   },
   "servers": [
     {
