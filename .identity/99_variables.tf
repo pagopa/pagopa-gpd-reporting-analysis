@@ -54,3 +54,8 @@ variable "github_repository_environment" {
     reviewers_teams        = ["pagopa-team-core"]
   }
 }
+
+variable "gpd_base_path" {
+  type = string
+}
+

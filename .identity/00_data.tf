@@ -37,3 +37,9 @@ data "azurerm_user_assigned_identity" "identity_cd_01"{
   name = "${local.prefix}-${var.env_short}-${local.domain}-01-github-cd-identity"
   resource_group_name = "${local.prefix}-${var.env_short}-identity-rg"
 }
+
+
+data "azurerm_key_vault_secret" "gpd_subkey" {
+  name         = "gpd-subkey-for-reporting"
+  key_vault_id = data.azurerm_key_vault.domain_key_vault.id
+}
