@@ -51,7 +51,7 @@ class FlowServiceIntegrationTest {
     @Test
     void getByOrganization_noFlowDate() {
         flowsService = spy(new FlowsService(storageConnectionString, flowsTable, containerBlob, logger));
-        String organizationId =  "90000000000";
+        String organizationId = "90000000000";
         List<Flow> flows = null;
         try {
             createTable();
@@ -65,7 +65,7 @@ class FlowServiceIntegrationTest {
     @Test
     void getByOrganization_withFlowDate() {
         flowsService = spy(new FlowsService(storageConnectionString, flowsTable, containerBlob, logger));
-        String organizationId =  "90000000000";
+        String organizationId = "90000000000";
         List<Flow> flows = null;
         try {
             createTable();
@@ -80,7 +80,7 @@ class FlowServiceIntegrationTest {
     void getByFlow() throws Exception {
         flowsService = spy(new FlowsService(storageConnectionString, flowsTable, containerBlob, logger));
 
-        String organizationId =  "idPa";
+        String organizationId = "idPa";
         String flowId = "idFlow";
         String flowDate = "dataOra";
         String data = null;
@@ -106,7 +106,7 @@ class FlowServiceIntegrationTest {
     void getByFlow_KO() {
         flowsService = spy(new FlowsService(storageConnectionString, flowsTable, containerBlob, logger));
 
-        String organizationId =  "idPa";
+        String organizationId = "idPa";
         String flowId = "idFlowKO";
         String flowDate = "dataOra";
         String data = null;
@@ -123,7 +123,7 @@ class FlowServiceIntegrationTest {
         try {
             data = flowsService.getByFlow(organizationId, flowId, flowDate);
             assertNull(data);
-        } catch(Exception e) {
+        } catch (Exception e) {
             assertNull(data);
         } finally {
             blobServiceClient.deleteBlobContainer(containerBlob);
