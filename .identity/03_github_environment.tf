@@ -22,8 +22,6 @@ resource "github_repository_environment" "github_repository_environment" {
 locals {
   env_secrets = {
     "CLIENT_ID" : data.azurerm_user_assigned_identity.identity_cd_01.client_id,
-    # <placeholder>
-    # "CT_CLIENT_ID" : data.azurerm_user_assigned_identity.identity_ct.client_id,
     "TENANT_ID" : data.azurerm_client_config.current.tenant_id,
     "SUBSCRIPTION_ID" : data.azurerm_subscription.current.subscription_id,
     "API_SUBSCRIPTION_KEY" : data.azurerm_key_vault_secret.key_vault_integration_test_subkey.value,
@@ -34,8 +32,7 @@ locals {
     "CONTAINER_APP_ENVIRONMENT_RESOURCE_GROUP_NAME" : local.container_app_environment.resource_group,
     "CLUSTER_NAME" : local.aks_cluster.name,
     "CLUSTER_RESOURCE_GROUP" : local.aks_cluster.resource_group_name,
-    "NAMESPACE" : local.domain,
-    "WORKLOAD_IDENTITY_ID": data.azurerm_user_assigned_identity.workload_identity_clientid.client_id
+    "NAMESPACE" : local.domain
   }
   repo_secrets = {
     "SONAR_TOKEN" : data.azurerm_key_vault_secret.key_vault_sonar.value,

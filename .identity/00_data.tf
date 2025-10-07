@@ -33,11 +33,6 @@ data "azurerm_key_vault_secret" "key_vault_integration_test_subkey" {
   key_vault_id = data.azurerm_key_vault.key_vault.id
 }
 
-data "azurerm_user_assigned_identity" "workload_identity_clientid" {
-  name                = "gps-workload-identity"
-  resource_group_name = "pagopa-${var.env_short}-${local.location_short}-${var.env}-aks-rg"
-}
-
 data "azurerm_user_assigned_identity" "identity_cd_01" {
   name                = "${local.product}-${local.domain}-job-01-github-cd-identity"
   resource_group_name = "${local.product}-identity-rg"
