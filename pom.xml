@@ -5,7 +5,7 @@
 
     <groupId>it.gov.pagopa.reporting</groupId>
     <artifactId>reporting-analysis</artifactId>
-    <version>0.3.2</version>
+    <version>0.3.2-1-fix-not-found-report</version>
     <packaging>jar</packaging>
 
     <name>Azure Reporting-Analysis Fn</name>
