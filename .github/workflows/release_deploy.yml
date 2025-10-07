@@ -225,3 +225,23 @@ jobs:
       - name: Azure logout
         run: |
           az logout
+
+
+  notify:
+    needs: [ deploy_azure_fn ]
+    runs-on: ubuntu-latest
+    name: Notify
+    if: always()
+    steps:
+      - name: Report Status
+        if: always()
+        uses: ravsamhq/notify-slack-action@be814b201e233b2dc673608aa46e5447c8ab13f2 # v2
+        with:
+          status: ${{ needs.deploy_azure_fn.result }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          notify_when: 'failure,skipped'
+          notification_title: '{workflow} has {status_message}'
+          message_format: '{emoji} <{workflow_url}|{workflow}> {status_message} in <{repo_url}|{repo}>'
+          footer: 'Linked to Repo <{repo_url}|{repo}>'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_DEPLOY }}
