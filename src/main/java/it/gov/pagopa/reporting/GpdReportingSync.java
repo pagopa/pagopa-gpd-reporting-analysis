@@ -53,6 +53,13 @@ public class GpdReportingSync {
                 logger.log(Level.WARNING, () -> "[GpdReportingSync] The message was ignored because it wasn't parsed correctly. msg=[" + event + "]");
                 continue;
             }
+
+            // In FDR-1, transferId is not mandatory if there is only one transfer;
+            // If ID_TRANSFER is null override with 1.
+            if (reportedIUVEventModel.getIdTransfer() == null) {
+                reportedIUVEventModel.setIdTransfer(1L);
+            }
+
             gpdReport(logger, reportedIUVEventModel.getDomainId(), reportedIUVEventModel.getIuv(), String.valueOf(reportedIUVEventModel.getIdTransfer()));
         }
 
