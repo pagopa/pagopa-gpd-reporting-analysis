@@ -234,7 +234,7 @@ jobs:
     if: always()
     steps:
       - name: Report Status
-        if: always()
+        if: ${{ inputs.environment == 'prod' }}
         uses: ravsamhq/notify-slack-action@be814b201e233b2dc673608aa46e5447c8ab13f2 # v2
         with:
           status: ${{ needs.deploy_azure_fn.result }}
