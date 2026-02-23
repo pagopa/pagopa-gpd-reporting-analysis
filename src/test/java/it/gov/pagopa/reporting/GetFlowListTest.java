@@ -9,12 +9,15 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.security.InvalidKeyException;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -146,4 +149,23 @@ class GetFlowListTest {
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatus());
     }
 
+    @Test
+    void frunKO_flowDateTooOld() {
+
+        // general var
+        Logger loggerMock = Logger.getLogger("testLogger");
+        FlowsService flowsService = new FlowsService("fakeConnStr", "fakeTable", "fakeBlob", loggerMock);
+        String organizationId = "12345678901";        
+        String oldFlowDate = OffsetDateTime.now()
+                .minusYears(2)
+                .format(DateTimeFormatter.ISO_LOCAL_DATE); // Formato yyyy-MM-dd
+
+        // Check that an IllegalArgumentException is thrown when the flowDate is older than the allowed depth
+        IllegalArgumentException exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            flowsService.fetchFdr3List(organizationId, oldFlowDate);
+        });
+
+        // Assert that the exception message is correct
+        Assertions.assertEquals("The date cannot be older than 1 month.", exception.getMessage());
+    }
 }
