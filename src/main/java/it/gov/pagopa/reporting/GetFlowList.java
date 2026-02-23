@@ -73,6 +73,7 @@ public class GetFlowList {
 
             return request.createResponseBuilder(HttpStatus.BAD_REQUEST)
                     .header("Content-Type", "application/json")
+                    .body("{\"Error\": \"Error retrieving flow list: " + e.getLocalizedMessage() + "\"}")
                     .build();
         }
     }
