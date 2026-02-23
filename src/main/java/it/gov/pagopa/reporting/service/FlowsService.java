@@ -29,6 +29,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -156,11 +157,23 @@ public class FlowsService {
                 ? OffsetDateTime.parse(flowDate + "T23:59:59Z")
                 : null;
 
+        String maxFdrFlowDate = OffsetDateTime.now(ZoneOffset.UTC)
+                    .minusMonths(flowListDepth)
+                    .plusDays(1)
+                    .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+
         final String fdrFlowDate = (flowDate != null)
                 ? flowDate + "T00:00:00Z"
-                : OffsetDateTime.now(ZoneOffset.UTC)
-                    .minusMonths(flowListDepth)
-                    .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+                : maxFdrFlowDate;
+
+        // if a specific flowDate has been specified, check that it is not older than the maximum depth allowed for FDR3
+        if (flowDate != null) {
+            Instant iMaxFdrFlowDate = Instant.parse(maxFdrFlowDate);
+            Instant iFlowDate = Instant.parse(flowDate + "T23:59:59Z");
+            if (iFlowDate.isBefore(iMaxFdrFlowDate)) {
+                throw new IllegalArgumentException("The date cannot be older than 1 month.");
+            }
+        }
 
         String url = String.format(
             "%s/organizations/%s/fdrs?page=1&size=%s&flowDate=%s",
