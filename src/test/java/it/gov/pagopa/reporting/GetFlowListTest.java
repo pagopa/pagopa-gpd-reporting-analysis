@@ -133,6 +133,7 @@ class GetFlowListTest {
 
         doReturn(builder).when(request).createResponseBuilder(any(HttpStatus.class));
         doReturn(builder).when(builder).header(anyString(), anyString());
+        doReturn(builder).when(builder).body(any());
 
         HttpResponseMessage responseMock = mock(HttpResponseMessage.class);
         doReturn(HttpStatus.BAD_REQUEST).when(responseMock).getStatus();
