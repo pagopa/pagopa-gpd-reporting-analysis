@@ -85,7 +85,7 @@ public class FlowsService {
         String queryWhereClause = TableQuery.generateFilterCondition("PartitionKey", TableQuery.QueryComparisons.EQUAL, organizationId);
         /*
         * The saved flow date field is a string data, so it cannot be filtered as a numeric or temporal data. Also, in Azure Table storage it does not
-        * exists the LIKE clause, so a workaround is made using ASCII character evaluation in 'ge' and 'le' operators. In particular, adding 'T0' string permits
+        * exist the LIKE clause, so a workaround is made using ASCII character evaluation in 'ge' and 'le' operators. In particular, adding 'T0' string permits
         * to evaluate all dates that are greater or equals than HH=00 of passed date, and adding T3 string permits to evaluate all dates that are lower or equals than
         * HH=23 (because character '2' is lower than character '3' and over hour '23' is not a valid date)
         */
@@ -152,21 +152,20 @@ public class FlowsService {
 
         logger.log(Level.INFO, () -> String.format("[FlowsService][fetchFdr3List] START get flow list from FDR3: %s", organizationId));
 
-        // build upper and lower boud in case specific flowDate has been specified
+        // build upper and lower bound in case specific flowDate has been specified
         final OffsetDateTime filterUpperBound = (flowDate != null)
                 ? OffsetDateTime.parse(flowDate + "T23:59:59Z")
                 : null;
 
         String maxFdrFlowDate = OffsetDateTime.now(ZoneOffset.UTC)
-                    .minusMonths(flowListDepth)
-                    .plusDays(1)
-                    .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+                .minusDays(30)
+                .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
 
         final String fdrFlowDate = (flowDate != null)
                 ? flowDate + "T00:00:00Z"
                 : maxFdrFlowDate;
 
-        // if a specific flowDate has been specified, check that it is not older than the maximum depth allowed for FDR3
+        // if a specific flowDate has been specified, check that it is not older than the maximum depth allowed for FDR3 (30 days)
         if (flowDate != null) {
             Instant iMaxFdrFlowDate = Instant.parse(maxFdrFlowDate);
             Instant iFlowDate = Instant.parse(flowDate + "T23:59:59Z");
@@ -176,7 +175,7 @@ public class FlowsService {
         }
 
         String url = String.format(
-            "%s/organizations/%s/fdrs?page=1&size=%s&flowDate=%s",
+            "%s/internal/organizations/%s/fdrs?page=1&size=%s&flowDate=%s",
             fdr3BaseUrl,
             organizationId,
             listEl4Page,
