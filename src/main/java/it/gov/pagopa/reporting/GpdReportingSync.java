@@ -1,5 +1,6 @@
 package it.gov.pagopa.reporting;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
@@ -60,13 +61,46 @@ public class GpdReportingSync {
                 reportedIUVEventModel.setIdTransfer(1L);
             }
 
-            gpdReport(logger, reportedIUVEventModel.getDomainId(), reportedIUVEventModel.getIuv(), String.valueOf(reportedIUVEventModel.getIdTransfer()));
+            gpdReport(logger, reportedIUVEventModel);
         }
 
     }
 
-    public void gpdReport(Logger logger, String organizationId, String iuv, String transferId) {
+    public void gpdReport(Logger logger,  ReportedIUVEventModel reportedIUVEventModel){
+        String organizationId = reportedIUVEventModel.getDomainId();
+        String iuv = reportedIUVEventModel.getIuv();
+        String transferId = String.valueOf(reportedIUVEventModel.getIdTransfer());
+        String ctx = "[GpdReportingSync] org=" + organizationId + " iuv=" + iuv
+            + " iur=" + reportedIUVEventModel.getIur() + " flow=" + reportedIUVEventModel.getFlowId();
+
         try {
+            HttpResponse<String> getResponse = Unirest.get(gpdBasePath
+                    + "/organizations/" + organizationId
+                    + "/paymentoptions/" + iuv + "/debtposition")
+                .header("accept", "application/json")
+                .header("ocp-apim-subscription-key", gpdSubeKey)
+                .asString();
+
+            String iur = reportedIUVEventModel.getIur();
+
+            if (getResponse.getStatus() == 200 && iur != null && !iur.isBlank()) {
+                JsonNode position = new ObjectMapper().readTree(getResponse.getBody());
+                for (JsonNode po : position.path("paymentOption")) {
+                    if (iuv.equals(po.path("iuv").asText(null))) {
+                        // receipt field: idReceipt/receiptId, to be aligned with the actual contract
+                        String poReceiptId = po.path("idReceipt").asText(null);
+                        if (poReceiptId != null && !iur.equals(poReceiptId)) {
+                            logger.log(Level.SEVERE, () -> ctx + " SKIP report: IUR mismatch"
+                                + " (paymentOption receipt=" + poReceiptId + ")"
+                                + " - the reporting flow refers to a different payment,"
+                                + " no state transition performed");
+                            return;
+                        }
+                        break;
+                    }
+                }
+            }
+
             HttpResponse<String> response = Unirest.post(gpdBasePath + "/organizations/" + organizationId + "/paymentoptions/" + iuv + "/transfers/" + transferId + "/report")
                     .header("accept", "application/json")
                     .header("ocp-apim-subscription-key", gpdSubeKey)
