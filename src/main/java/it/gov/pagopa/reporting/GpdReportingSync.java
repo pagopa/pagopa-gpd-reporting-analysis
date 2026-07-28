@@ -55,10 +55,10 @@ public class GpdReportingSync {
                 continue;
             }
 
-            // In FDR-1, transferId is not mandatory if there is only one transfer;
+            // In FDR-1, transferId is not mandatory
             // If ID_TRANSFER is null override with 1.
-            if (reportedIUVEventModel.getIdTransfer() == null) {
-                reportedIUVEventModel.setIdTransfer(1L);
+            if (reportedIUVEventModel.getIdsp() == null) {
+                reportedIUVEventModel.setIdsp("1");
             }
 
             gpdReport(logger, reportedIUVEventModel);
@@ -69,7 +69,7 @@ public class GpdReportingSync {
     public void gpdReport(Logger logger,  ReportedIUVEventModel reportedIUVEventModel){
         String organizationId = reportedIUVEventModel.getDomainId();
         String iuv = reportedIUVEventModel.getIuv();
-        String transferId = String.valueOf(reportedIUVEventModel.getIdTransfer());
+        String transferId = String.valueOf(reportedIUVEventModel.getIdsp());
         String ctx = "[GpdReportingSync] org=" + organizationId + " iuv=" + iuv
             + " iur=" + reportedIUVEventModel.getIur() + " flow=" + reportedIUVEventModel.getFlowId();
 
