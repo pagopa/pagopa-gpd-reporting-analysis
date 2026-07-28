@@ -91,10 +91,10 @@ public class GpdReportingSync {
                     .body(body)
                     .asString();
             if (response.getStatus() != 200) {
-                logger.log(Level.SEVERE, () -> "[GpdReportingSync] GPD client failed with status " + response.getStatus() + " body:" + response.getBody());
+                logger.log(Level.SEVERE, () -> ctx + "[GpdReportingSync] GPD client failed with status " + response.getStatus() + " body:" + response.getBody());
             }
         } catch (Exception e) {
-            logger.log(Level.SEVERE, () -> "[GpdReportingSync] GPD client Exception: " + e.getLocalizedMessage());
+            logger.log(Level.SEVERE, () -> ctx + "[GpdReportingSync] GPD client Exception: " + e.getLocalizedMessage());
         }
     }
 
