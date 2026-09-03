@@ -1,5 +1,6 @@
 package it.gov.pagopa.reporting;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
@@ -54,28 +55,46 @@ public class GpdReportingSync {
                 continue;
             }
 
-            // In FDR-1, transferId is not mandatory if there is only one transfer;
+            // In FDR-1, transferId is not mandatory
             // If ID_TRANSFER is null override with 1.
-            if (reportedIUVEventModel.getIdTransfer() == null) {
-                reportedIUVEventModel.setIdTransfer(1L);
+            if (reportedIUVEventModel.getIdsp() == null) {
+                reportedIUVEventModel.setIdsp("1");
             }
 
-            gpdReport(logger, reportedIUVEventModel.getDomainId(), reportedIUVEventModel.getIuv(), String.valueOf(reportedIUVEventModel.getIdTransfer()));
+            gpdReport(logger, reportedIUVEventModel);
         }
 
     }
 
-    public void gpdReport(Logger logger, String organizationId, String iuv, String transferId) {
+    public void gpdReport(Logger logger,  ReportedIUVEventModel reportedIUVEventModel){
+        String organizationId = reportedIUVEventModel.getDomainId();
+        String iuv = reportedIUVEventModel.getIuv();
+        String transferId = String.valueOf(reportedIUVEventModel.getIdsp());
+        String ctx = "[GpdReportingSync] org=" + organizationId + " iuv=" + iuv
+            + " iur=" + reportedIUVEventModel.getIur() + " flow=" + reportedIUVEventModel.getFlowId();
+
         try {
+
+            String iur = reportedIUVEventModel.getIur();
+            String body;
+            try {
+                body = new ObjectMapper()
+                    .writeValueAsString(java.util.Collections.singletonMap("iur", iur));
+            } catch (Exception e) {
+                body = "{}";
+            }
+
             HttpResponse<String> response = Unirest.post(gpdBasePath + "/organizations/" + organizationId + "/paymentoptions/" + iuv + "/transfers/" + transferId + "/report")
                     .header("accept", "application/json")
                     .header("ocp-apim-subscription-key", gpdSubeKey)
+                    .header("Content-Type", "application/json")
+                    .body(body)
                     .asString();
             if (response.getStatus() != 200) {
-                logger.log(Level.SEVERE, () -> "[GpdReportingSync] GPD client failed with status " + response.getStatus() + " body:" + response.getBody());
+                logger.log(Level.SEVERE, () -> ctx + "[GpdReportingSync] GPD client failed with status " + response.getStatus() + " body:" + response.getBody());
             }
         } catch (Exception e) {
-            logger.log(Level.SEVERE, () -> "[GpdReportingSync] GPD client Exception: " + e.getLocalizedMessage());
+            logger.log(Level.SEVERE, () -> ctx + "[GpdReportingSync] GPD client Exception: " + e.getLocalizedMessage());
         }
     }
 
