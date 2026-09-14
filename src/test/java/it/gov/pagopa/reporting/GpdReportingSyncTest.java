@@ -42,7 +42,7 @@ class GpdReportingSyncTest {
 
         function.run(messages,  context);
 
-        Mockito.verify(function, never()).gpdReport(any(), any(), any(), any());
+        Mockito.verify(function, never()).gpdReport(any(), any());
     }
 
     @Test
@@ -57,7 +57,7 @@ class GpdReportingSyncTest {
 
         function.run(messages, context);
 
-        Mockito.verify(function, times(1)).gpdReport(any(), any(), any(), any());
+        Mockito.verify(function, times(1)).gpdReport(any(), any());
     }
 
     @Test
@@ -73,6 +73,6 @@ class GpdReportingSyncTest {
 
         function.run(messages, context);
 
-        Mockito.verify(function, times(1)).gpdReport(any(), any(), any(), any());
+        Mockito.verify(function, times(1)).gpdReport(any(), any());
     }
 }
