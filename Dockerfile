@@ -16,6 +16,6 @@ FROM mcr.microsoft.com/azure-functions/java:4-java$JAVA_VERSION
 
 ENV AzureWebJobsScriptRoot=/home/site/wwwroot \
     AzureFunctionsJobHost__Logging__Console__IsEnabled=true \
-    JAVA_TOOL_OPTIONS="-XX:-UseBASE64Intrinsics"
+    JAVA_OPTS="-XX:-UseBASE64Intrinsics"
 
 COPY --from=installer-env ["/home/site/wwwroot", "/home/site/wwwroot"]
